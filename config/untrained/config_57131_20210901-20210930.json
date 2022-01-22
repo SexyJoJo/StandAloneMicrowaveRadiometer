@@ -5,19 +5,17 @@
 
   "sounding_path": "D:\\Data\\microwave radiometer\\Sounding",
 
-  "model_path": "D:\\PythonProject\\Stand_alone_microradio\\out\\model1",
+  "model_path": ".\\out\\model",
 
-  "sample_path": "D:\\PythonProject\\Stand_alone_microradio\\out\\sample1",
+  "sample_path": ".\\out\\sample",
 
-  "model_name": "57131-1-month",
+  "model_name": "57131_20210901-20210930",
 
   "wbfsj_id": "57131",
 
-  "alt": 409,
-
   "data_sources": [
       {
-        "stime": "2021-9-01",
+        "stime": "2011-10-01",
         "etime": "2021-09-30",
         "cloud_disturb": 0.5,
         "k_disturb": 1,

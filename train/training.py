@@ -14,6 +14,7 @@ from sklearn.neural_network import MLPRegressor
 from sklearn.exceptions import ConvergenceWarning
 import warnings
 
+
 class Train:
     @staticmethod
     def SaveModelParameters(fileFullName, grid, element, s_scaler, out_scaler):
@@ -205,7 +206,7 @@ class Train:
         return x_train, y_train, s_scaler, out_scaler
 
     @staticmethod
-    def TrainModelAndSave(elements, max_iter, activation, solver,
+    def TrainModelAndSave(config, elements, max_iter, activation, solver,
                           hidden_nodes_range, all_input_df, all_temp_output_df,
                           all_humi_output_df, all_vapor_output_df,
                           modelFullName):
@@ -213,7 +214,7 @@ class Train:
         循环训练各个要素模型
         """
         # 样本标准化以及保存样本文件
-        filePath = CONFIG["sample_path"]
+        filePath = config["sample_path"]
         # 隐层节点列表
         hidden_list = []
         for i in range(hidden_nodes_range[0], hidden_nodes_range[1] + 1, 1):
@@ -250,7 +251,7 @@ class Train:
                 modelFullName, grid, element, s_scaler, out_scaler)
 
     @staticmethod
-    def SamplePerturbation(input_nodes, inputDF, disrurb, surfaceNodes,
+    def SamplePerturbation(config, input_nodes, inputDF, disrurb, surfaceNodes,
                            cloudNodes):
         k_d = disrurb['k_disturb']
         weak_absorption_d = disrurb['weak_absorption_disturb']
@@ -272,7 +273,7 @@ class Train:
             # 弱吸收通道扰
             for index, channelNumber in enumerate(input_nodes):
                 # standardChannel = StandardChannelDao().getStandardChannelByNumber(channelNumber)
-                frequency = float(CONFIG["standardChannel"][index])
+                frequency = float(config["standardChannel"][index])
                 if frequency > k_weak_absorption_frequency:
                     k_weak_absorption_index = index
                 if frequency > weak_absorption_v_frequency:
@@ -361,7 +362,7 @@ class Train:
         return input_DF
 
     @staticmethod
-    def OrganizationalColumns(selectBtNodeNumbers, surfaceNodes, cloudNodes,
+    def OrganizationalColumns(config, selectBtNodeNumbers, surfaceNodes, cloudNodes,
                               isTime):
         """
             动态组织df列头
@@ -377,7 +378,7 @@ class Train:
             ["22.4","","","",...........]
         """
         frequencyList = []
-        standardChannel = CONFIG["standardChannel"]
+        standardChannel = config["standardChannel"]
         for channels_number in selectBtNodeNumbers:
             frequencyList.append(standardChannel[channels_number])
         # 温湿压列头
@@ -409,12 +410,10 @@ class Train:
         return header
 
     @staticmethod
-    def OrganizeTrainingSamples(data_sources, output_nodes,
-                                input_nodes):
-
+    def OrganizeTrainingSamples(config, data_sources, output_nodes, input_nodes):
         # 动态列头
         header = Train.OrganizationalColumns(
-            input_nodes["btNodes"], input_nodes["surfaceNodes"],
+            config, input_nodes["btNodes"], input_nodes["surfaceNodes"],
             input_nodes["cloudNodes"], isTime=False)
         """
         组织训练样本数据
@@ -449,7 +448,7 @@ class Train:
             #         ForwardResult.sounding_station_id == data_source["id"])
             # filters.append(ForwardResult.datetime >= data_source["stime"])
             # filters.append(ForwardResult.datetime <= data_source["etime"])
-            forwardResults = ParseUtils.get_forward_results_by_condition(data_source)
+            forwardResults = ParseUtils.get_forward_results_by_condition(config, data_source)
             if not len(forwardResults):
                 train_log.logger.warning("所选设备和日期条件无正演结果")
             """
@@ -507,15 +506,15 @@ class Train:
 
             for obs_time in forwardResults:
                 # btList = []
-                tempList = []   # 输出
-                humiList = []   # 输出
+                tempList = []  # 输出
+                humiList = []  # 输出
                 vaporList = []  # 输出
                 temp_humi_pres_List = []
                 cloud_List = []
 
                 btLists.append(forwardResults[obs_time])
 
-                layers83 = ParseUtils.parse_sounding_file(obs_time)
+                layers83 = ParseUtils.parse_sounding_file(config, obs_time)
                 for layer in layers83:
                     layer["temperature"] = 200 if math.isinf(float(layer["temperature"])) else layer["temperature"]
                     tempList.append(layer["temperature"])
@@ -606,7 +605,7 @@ class Train:
 
             # 输入加扰动项
             input_DF = Train.SamplePerturbation(
-                input_nodes["btNodes"], input_DF, disturb,
+                config, input_nodes["btNodes"], input_DF, disturb,
                 input_nodes["surfaceNodes"], input_nodes["cloudNodes"])
             if not input_DF.empty:
                 input_DF.columns = header
@@ -627,14 +626,13 @@ class Train:
         return all_input_df, all_temp_output_df, all_humi_output_df, all_vapor_output_df
 
     @staticmethod
-    def training(data_sources, activation, elements, hidden_nodes_range, input_nodes_range, output_nodes,
-                 max_iter, normalization, solver):
+    def training(config):
         try:
             # 输入节点灵活选择
             btNodes = []
             surfaceNodes = []
             cloudNodes = []
-            for node in input_nodes_range:
+            for node in config["input_nodes"]:
                 if node == 'surface-all':
                     surfaceNodes = [0, 1, 2]
                     continue
@@ -643,7 +641,7 @@ class Train:
                     continue
                 if node == 'band-all':
                     # wbfsj = WBFSJDao().getWBFSJById(wbfsj_id)
-                    btNodes = DEVICE_INFO[CONFIG["wbfsj_id"]]["channels_map"]
+                    btNodes = DEVICE_INFO[config["wbfsj_id"]]["channels_map"]
                     continue
                 # 非全部节点
                 if "band" in node:
@@ -660,24 +658,23 @@ class Train:
 
             train_log.logger.info("正在初始化并保存模型文件...")
             # 初始化并保存模型文件
-            modelFullName = TrainUtils.SaveModelParamFile(
-                data_sources, activation, elements,
-                input_nodes, normalization)
+            modelFullName = TrainUtils.SaveModelParamFile(config, config["data_sources"], config["activation"],
+                                                          config["elements"], input_nodes, config["normalization"])
             train_log.logger.info("Done.")
 
             # 组织输入样本
             train_log.logger.info("正在组织输入样本...")
             # wbfsj_id = CONFIG["wbfsj_id"]
             all_input_df, all_temp_output_df, all_humi_output_df, all_vapor_output_df = Train.OrganizeTrainingSamples(
-                data_sources, output_nodes, input_nodes)
+                config, config["data_sources"], config["output_nodes"], input_nodes)
             train_log.logger.info("Done.")
 
             if not all_input_df.empty:
                 train_log.logger.info("模型训练中...")
                 # 训练模型并保存参数
                 Train.TrainModelAndSave(
-                    elements, max_iter, activation, solver,
-                    hidden_nodes_range, all_input_df, all_temp_output_df,
+                    config, config["elements"], config["max_iter"], config["activation"], config["solver"],
+                    config["hidden_nodes"], all_input_df, all_temp_output_df,
                     all_humi_output_df, all_vapor_output_df, modelFullName)
                 # status = 0
                 message = "训练成功"
@@ -690,15 +687,9 @@ class Train:
             # TrainTaskDao().updateTrainTask(trainTask)
             # return resultInfo.success(msg=message)
             train_log.logger.info(message)
+            return True
         except Exception as e:
-            # traceback.print_exc()
-            # err_info = traceback.format_exc()
-            # train_log.logger.error(e)
-            # 修改训练任务状态
-            # trainTask = TrainTaskDao().getTrainTaskByID(trainTask.id)
-            # trainTask.status = 1
-            # TrainTaskDao().updateTrainTask(trainTask)
-            # 删除模型文件
             FileUtils.DeleteFile(modelFullName)
             train_log.logger.error("fail\n")
             print(e)
+            return False

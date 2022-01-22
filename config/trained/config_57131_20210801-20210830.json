@@ -1,0 +1,49 @@
+{
+  "standardChannel": [22.234, 22.235, 22.240, 22.500, 23.034, 23.035, 23.040, 23.834, 23.835, 23.840, 25.000, 25.440, 26.234, 26.235, 26.240, 27.840, 28.000, 30.000, 31.400, 51.248, 51.250, 51.260,51.760, 52.280, 52.800, 52.804, 53.336, 53.340, 53.848, 53.850, 53.860, 54.400, 54.940,55.500, 56.020, 56.660, 57.288, 57.290, 57.300, 57.960, 57.964, 58.000, 58.800],
+
+  "forward_result_path": "D:\\Data\\microwave radiometer\\Forward Result\\sounding",
+
+  "sounding_path": "D:\\Data\\microwave radiometer\\Sounding",
+
+  "model_path": ".\\out\\model",
+
+  "sample_path": ".\\out\\sample",
+
+  "model_name": "57131_20210801-20210830",
+
+  "wbfsj_id": "57131",
+
+  "data_sources": [
+      {
+        "stime": "2021-08-01",
+        "etime": "2021-08-30",
+        "cloud_disturb": 0.5,
+        "k_disturb": 1,
+        "v_disturb": 2,
+        "absorb_disturb" : 2
+      }
+    ],
+
+  "input_nodes": [
+      "band-all",
+      "surface-all",
+      "cloud-all"
+    ],
+
+  "output_nodes": 83,
+
+    "elements": [
+      "temp",
+      "humi",
+      "vapor"
+    ],
+
+  "normalization": "minmax",
+  "activation": "tanh",
+  "solver": "lbfgs",
+  "hidden_nodes": [
+      31,
+      31
+  ],
+  "max_iter": 1000
+}

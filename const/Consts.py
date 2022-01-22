@@ -1,7 +1,5 @@
 import json
 
-with open(r"config/config.json", "r", encoding='utf8') as f:
-    CONFIG = json.load(f)
 with open(r"config/device_info.json", "r", encoding='utf8') as f:
     DEVICE_INFO = json.load(f)
 

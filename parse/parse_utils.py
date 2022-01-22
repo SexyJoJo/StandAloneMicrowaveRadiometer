@@ -4,15 +4,17 @@ import sys
 from scipy import interpolate
 import pandas as pd
 from const import TrainConsts
-from const.Consts import CONFIG, DEVICE_INFO
+from const.Consts import DEVICE_INFO
 import os
 from datetime import datetime
+
 
 # class Mysql:
 #     @staticmethod
 #     def get_info_by_station(info):
 #         conn = sqlalchemy.create_engine('mysql+pymysql://root:123@localhost/microwave?charset=utf8')
-#         station_id = CONFIG["wbfsj_id"]
+#         station_id =
+#         config["wbfsj_id"]
 #         sql = f"SELECT {info} FROM t_device_info WHERE station_id={station_id}"
 #         result = conn.execute(sql).fetchone()[0]
 #         if isinstance(result, str):
@@ -21,7 +23,7 @@ from datetime import datetime
 
 class ParseUtils:
     @staticmethod
-    def parse_forward_result(result_file):
+    def parse_forward_result(config, result_file):
         """解析正演结果，返回43通道亮温值"""
         brightness_temperature_43channels = []
 
@@ -41,7 +43,8 @@ class ParseUtils:
 
         # 映射
         mapped_bt = []
-        mapped_channels = DEVICE_INFO[CONFIG["wbfsj_id"]]["channels_map"]
+        mapped_channels = DEVICE_INFO[
+            config["wbfsj_id"]]["channels_map"]
         for ch_num in mapped_channels:
             mapped_bt.append(brightness_temperature_43channels[ch_num])
         return mapped_bt
@@ -54,9 +57,12 @@ class ParseUtils:
     #     return first_line[0:3]
 
     @staticmethod
-    def parse_sounding_file(obs_time):
-        unified_format_file_name = CONFIG["wbfsj_id"] + "_" + obs_time + ".txt"
-        file_path = os.path.join(CONFIG["sounding_path"], CONFIG["wbfsj_id"], obs_time[:4], obs_time[4:6])
+    def parse_sounding_file(config, obs_time):
+        unified_format_file_name = \
+            config["wbfsj_id"] + "_" + obs_time + ".txt"
+        file_path = os.path.join(
+            config["sounding_path"],
+            config["wbfsj_id"], obs_time[:4], obs_time[4:6])
         fullPath = os.path.join(file_path,
                                 unified_format_file_name)
         # 开始观测时间
@@ -94,7 +100,8 @@ class ParseUtils:
                 "humidity": None,
             }
             # 设备海拔高度,探空数据插值时加上海拔高度
-            alt = float(CONFIG["alt"])
+            alt = float(DEVICE_INFO[
+                            config["wbfsj_id"]]["alt"])
             height83 = [(i * 1000 + round(alt)) for i in TrainConsts.BASE_HEIGHT83]
             last_pressure = -1
             last_temperature = -1
@@ -133,14 +140,14 @@ class ParseUtils:
             print(f"缺少{obs_time}探空文件")
             sys.exit()
 
-    @ staticmethod
-    def get_forward_results_by_condition(data_source):
+    @staticmethod
+    def get_forward_results_by_condition(config, data_source):
         """根据设备号和日期筛选所需的正演结果数据"""
         print("正在解析正演结果")
         results = {}
-        selected_path = os.path.join(CONFIG["forward_result_path"],
-                                     str(DEVICE_INFO[CONFIG["wbfsj_id"]]["id"]),
-                                     str(DEVICE_INFO[CONFIG["wbfsj_id"]]["alt"]))
+        selected_path = os.path.join(
+            config["forward_result_path"], str(DEVICE_INFO[config["wbfsj_id"]]["id"]),
+            str(DEVICE_INFO[config["wbfsj_id"]]["alt"]))
         for root, dirs, files in os.walk(selected_path):
             for filename in files:
                 if filename.endswith(".out"):
@@ -150,7 +157,7 @@ class ParseUtils:
                     etime = datetime.strptime(data_source["etime"], "%Y-%m-%d")
                     if stime <= file_time <= etime and os.path.getsize(os.path.join(root, filename)) != 0:
                         results[datetime.strftime(file_time, "%Y%m%d%H%M%S")] = \
-                            ParseUtils.parse_forward_result(os.path.join(root, filename))
+                            ParseUtils.parse_forward_result(config, os.path.join(root, filename))
         print("解析完毕")
         return results
 
