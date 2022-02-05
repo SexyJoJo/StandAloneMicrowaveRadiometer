@@ -138,8 +138,13 @@ class TrainUtils:
         }
 
         # 保存初始化的模型数据字典
+        if config["model_name"] == "":
+            model_name = config["wbfsj_id"] + "_" + \
+                         config["data_sources"][0]["stime"] + "-" + config["data_sources"][0]["etime"]
+        else:
+            model_name = config["model_name"]
         modelFullName = FileUtils.WriteDict2JsonFile(model_json,
                                                      config["model_path"],
-                                                     config["model_name"])
+                                                     model_name)
 
         return modelFullName
