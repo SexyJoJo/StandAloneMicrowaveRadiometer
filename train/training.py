@@ -29,7 +29,7 @@ class Train:
         submodel_index = 0  # 当前需写入的模型在submodels里的索引值
 
         # 读已写的模型标准输出文件
-        with open(fileFullName, 'r') as file:
+        with open(fileFullName, 'r', encoding='utf8') as file:
             file_dict = json.load(file)
 
         for index, value in enumerate(file_dict["submodels"]):
@@ -120,7 +120,7 @@ class Train:
             'out_activation_': es['out_activation_']
         }
 
-        with open(fileFullName, 'w') as parameters_file:
+        with open(fileFullName, 'w', encoding='utf8') as parameters_file:
             json.dump(file_dict, parameters_file, ensure_ascii=False, indent=4)
 
     @staticmethod
@@ -191,7 +191,7 @@ class Train:
         x_train.to_csv(
             os.path.join(filePath, taskId + "_" + element + '_x_train.csv'))
 
-        print("训练样本数目：x:", len(x_train), "y: ", len(y_train))
+        train_log.logger.info(f"训练样本数目：x:{len(x_train)} y: {len(y_train)}")
         y_train.to_csv(
             os.path.join(filePath, taskId + "_" + element + '_y_train.csv'))
         # minmax标准化
@@ -627,69 +627,69 @@ class Train:
 
     @staticmethod
     def training(config):
-        try:
-            # 输入节点灵活选择
-            btNodes = []
-            surfaceNodes = []
-            cloudNodes = []
-            for node in config["input_nodes"]:
-                if node == 'surface-all':
-                    surfaceNodes = [0, 1, 2]
-                    continue
-                if node == 'cloud-all':
-                    cloudNodes = [0, 1, 2, 3, 4, 5]
-                    continue
-                if node == 'band-all':
-                    # wbfsj = WBFSJDao().getWBFSJById(wbfsj_id)
-                    btNodes = DEVICE_INFO[config["wbfsj_id"]]["channels_map"]
-                    continue
-                # 非全部节点
-                if "band" in node:
-                    btNodes.append(int(node.split("-")[-1]))
-                if "surface" in node:
-                    surfaceNodes.append(int(node.split("-")[-1]))
-                if "cloud" in node:
-                    cloudNodes.append(int(node.split("-")[-1]))
-            input_nodes = {
-                "btNodes": btNodes,
-                "surfaceNodes": surfaceNodes,
-                "cloudNodes": cloudNodes
-            }
+        # try:
+        # 输入节点灵活选择
+        btNodes = []
+        surfaceNodes = []
+        cloudNodes = []
+        for node in config["input_nodes"]:
+            if node == 'surface-all':
+                surfaceNodes = [0, 1, 2]
+                continue
+            if node == 'cloud-all':
+                cloudNodes = [0, 1, 2, 3, 4, 5]
+                continue
+            if node == 'band-all':
+                # wbfsj = WBFSJDao().getWBFSJById(wbfsj_id)
+                btNodes = DEVICE_INFO[config["wbfsj_id"]]["channels_map"]
+                continue
+            # 非全部节点
+            if "band" in node:
+                btNodes.append(int(node.split("-")[-1]))
+            if "surface" in node:
+                surfaceNodes.append(int(node.split("-")[-1]))
+            if "cloud" in node:
+                cloudNodes.append(int(node.split("-")[-1]))
+        input_nodes = {
+            "btNodes": btNodes,
+            "surfaceNodes": surfaceNodes,
+            "cloudNodes": cloudNodes
+        }
 
-            train_log.logger.info("正在初始化并保存模型文件...")
-            # 初始化并保存模型文件
-            modelFullName = TrainUtils.SaveModelParamFile(config, config["data_sources"], config["activation"],
-                                                          config["elements"], input_nodes, config["normalization"])
-            train_log.logger.info("Done.")
+        train_log.logger.info("正在初始化并保存模型文件...")
+        # 初始化并保存模型文件
+        modelFullName = TrainUtils.SaveModelParamFile(config, config["data_sources"], config["activation"],
+                                                      config["elements"], input_nodes, config["normalization"])
+        train_log.logger.info("Done.")
 
-            # 组织输入样本
-            train_log.logger.info("正在组织输入样本...")
-            # wbfsj_id = CONFIG["wbfsj_id"]
-            all_input_df, all_temp_output_df, all_humi_output_df, all_vapor_output_df = Train.OrganizeTrainingSamples(
-                config, config["data_sources"], config["output_nodes"], input_nodes)
-            train_log.logger.info("Done.")
+        # 组织输入样本
+        train_log.logger.info("正在组织输入样本...")
+        # wbfsj_id = CONFIG["wbfsj_id"]
+        all_input_df, all_temp_output_df, all_humi_output_df, all_vapor_output_df = Train.OrganizeTrainingSamples(
+            config, config["data_sources"], config["output_nodes"], input_nodes)
+        train_log.logger.info("Done.")
 
-            if not all_input_df.empty:
-                train_log.logger.info("模型训练中...")
-                # 训练模型并保存参数
-                Train.TrainModelAndSave(
-                    config, config["elements"], config["max_iter"], config["activation"], config["solver"],
-                    config["hidden_nodes"], all_input_df, all_temp_output_df,
-                    all_humi_output_df, all_vapor_output_df, modelFullName)
-                # status = 0
-                message = "训练成功"
-            else:
-                # status = 1
-                message = "输入样本为0"
-            # 训练结束修改训练任务状态
-            # trainTask = TrainTaskDao().getTrainTaskByID(trainTask.id)
-            # trainTask.status = status
-            # TrainTaskDao().updateTrainTask(trainTask)
-            # return resultInfo.success(msg=message)
-            train_log.logger.info(message)
-            return True
-        except Exception as e:
-            FileUtils.DeleteFile(modelFullName)
-            train_log.logger.error("fail\n")
-            print(e)
-            return False
+        if not all_input_df.empty:
+            train_log.logger.info("模型训练中...")
+            # 训练模型并保存参数
+            Train.TrainModelAndSave(
+                config, config["elements"], config["max_iter"], config["activation"], config["solver"],
+                config["hidden_nodes"], all_input_df, all_temp_output_df,
+                all_humi_output_df, all_vapor_output_df, modelFullName)
+            # status = 0
+            message = "训练成功"
+        else:
+            # status = 1
+            message = "输入样本为0"
+        # 训练结束修改训练任务状态
+        # trainTask = TrainTaskDao().getTrainTaskByID(trainTask.id)
+        # trainTask.status = status
+        # TrainTaskDao().updateTrainTask(trainTask)
+        # return resultInfo.success(msg=message)
+        train_log.logger.info(message)
+        return True
+        # except Exception as e:
+        #     FileUtils.DeleteFile(modelFullName)
+        #     train_log.logger.error("fail\n")
+        #     print(e)
+        #     return False
