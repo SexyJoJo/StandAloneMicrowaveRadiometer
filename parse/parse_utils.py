@@ -14,7 +14,7 @@ from datetime import datetime
 #     def get_info_by_station(info):
 #         conn = sqlalchemy.create_engine('mysql+pymysql://root:123@localhost/microwave?charset=utf8')
 #         station_id =
-#         config["wbfsj_id"]
+#         config["sounding_station_id"]
 #         sql = f"SELECT {info} FROM t_device_info WHERE station_id={station_id}"
 #         result = conn.execute(sql).fetchone()[0]
 #         if isinstance(result, str):
@@ -44,7 +44,7 @@ class ParseUtils:
         # 映射
         mapped_bt = []
         mapped_channels = DEVICE_INFO[
-            config["wbfsj_id"]]["channels_map"]
+            config["sounding_station_id"]]["channels_map"]
         for ch_num in mapped_channels:
             mapped_bt.append(brightness_temperature_43channels[ch_num])
         return mapped_bt
@@ -59,10 +59,10 @@ class ParseUtils:
     @staticmethod
     def parse_sounding_file(config, obs_time):
         unified_format_file_name = \
-            config["wbfsj_id"] + "_" + obs_time + ".txt"
+            config["sounding_station_id"] + "_" + obs_time + ".txt"
         file_path = os.path.join(
             config["sounding_path"],
-            config["wbfsj_id"], obs_time[:4], obs_time[4:6])
+            config["sounding_station_id"], obs_time[:4], obs_time[4:6])
         fullPath = os.path.join(file_path,
                                 unified_format_file_name)
         # 开始观测时间
@@ -101,7 +101,7 @@ class ParseUtils:
             }
             # 设备海拔高度,探空数据插值时加上海拔高度
             alt = float(DEVICE_INFO[
-                            config["wbfsj_id"]]["alt"])
+                            config["sounding_station_id"]]["alt"])
             height83 = [(i * 1000 + round(alt)) for i in TrainConsts.BASE_HEIGHT83]
             last_pressure = -1
             last_temperature = -1
@@ -146,8 +146,8 @@ class ParseUtils:
         print("正在解析正演结果")
         results = {}
         selected_path = os.path.join(
-            config["forward_result_path"], str(DEVICE_INFO[config["wbfsj_id"]]["id"]),
-            str(DEVICE_INFO[config["wbfsj_id"]]["alt"]))
+            config["forward_result_path"], str(DEVICE_INFO[config["sounding_station_id"]]["id"]),
+            str(DEVICE_INFO[config["sounding_station_id"]]["alt"]))
         for root, dirs, files in os.walk(selected_path):
             for filename in files:
                 if filename.endswith(".out"):

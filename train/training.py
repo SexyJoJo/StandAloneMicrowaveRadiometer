@@ -641,7 +641,7 @@ class Train:
                 continue
             if node == 'band-all':
                 # wbfsj = WBFSJDao().getWBFSJById(wbfsj_id)
-                btNodes = DEVICE_INFO[config["wbfsj_id"]]["channels_map"]
+                btNodes = DEVICE_INFO[config["sounding_station_id"]]["channels_map"]
                 continue
             # 非全部节点
             if "band" in node:

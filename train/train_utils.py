@@ -64,7 +64,7 @@ class TrainUtils:
             # automaticStation = AutomaticStationDao().getAutomaticSationByID(
             #     id)
 
-            one_dict = {"station": config["wbfsj_id"], "interval": [stime, etime]}
+            one_dict = {"station": config["sounding_station_id"], "interval": [stime, etime]}
             # one_dict["dataType"] = "EC数据" if source["type"] else "探空数据"
             model_json["trainingData"].append(one_dict)
         # 默认没有该字段key，在反演时就不进行偏差订正
@@ -123,7 +123,7 @@ class TrainUtils:
 
         # 保存输入节点的通道索引等信息
         # 构建偏差订正、液态水订正参数数组和实际模型数组通道的映射关系
-        origin_equip_bands = DEVICE_INFO[config["wbfsj_id"]]["channels_map"]
+        origin_equip_bands = DEVICE_INFO[config["sounding_station_id"]]["channels_map"]
         # print(origin_equip_bands)
         mapping_bands = []  # 反演程序用
         for i, v in enumerate(origin_equip_bands):
@@ -139,7 +139,7 @@ class TrainUtils:
 
         # 保存初始化的模型数据字典
         if config["model_name"] == "":
-            model_name = config["wbfsj_id"] + "_" + \
+            model_name = config["sounding_station_id"] + "_" + \
                          config["data_sources"][0]["stime"] + "-" + config["data_sources"][0]["etime"]
         else:
             model_name = config["model_name"]
