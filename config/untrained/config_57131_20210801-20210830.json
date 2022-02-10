@@ -9,14 +9,14 @@
 
   "sample_path": ".\\out\\sample",
 
-  "model_name": "57131_20210901-20210930",
+  "model_name": "57131_20210801-20210830",
 
-  "wbfsj_id": "57131",
+  "sounding_station_id": "57131",
 
   "data_sources": [
       {
-        "stime": "2011-10-01",
-        "etime": "2021-09-30",
+        "stime": "2021-08-01",
+        "etime": "2021-08-30",
         "cloud_disturb": 0.5,
         "k_disturb": 1,
         "v_disturb": 2,

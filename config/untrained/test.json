@@ -9,14 +9,14 @@
 
   "sample_path": ".\\out\\sample",
 
-  "model_name": "57131_20210801-20210830",
+  "model_name": "",
 
-  "wbfsj_id": "57131",
+  "sounding_station_id": "57131",
 
   "data_sources": [
       {
-        "stime": "2021-08-01",
-        "etime": "2021-08-30",
+        "stime": "2021-09-01",
+        "etime": "2021-09-30",
         "cloud_disturb": 0.5,
         "k_disturb": 1,
         "v_disturb": 2,
@@ -42,8 +42,8 @@
   "activation": "tanh",
   "solver": "lbfgs",
   "hidden_nodes": [
-      31,
-      31
+      20,
+      40
   ],
   "max_iter": 1000
 }
