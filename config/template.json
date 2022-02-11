@@ -9,20 +9,11 @@
 
   "sample_path": ".\\out\\sample",
 
-  "model_name": "",
+  "model_name": "TaiYuan_TenYears_test",
 
-  "sounding_station_id": "57131",
+  "sounding_station_id": "53772",
 
-  "data_sources": [
-      {
-        "stime": "2021-09-01",
-        "etime": "2021-09-30",
-        "cloud_disturb": 0.5,
-        "k_disturb": 1,
-        "v_disturb": 2,
-        "absorb_disturb" : 2
-      }
-    ],
+  "data_sources": [],
 
   "input_nodes": [
       "band-all",
