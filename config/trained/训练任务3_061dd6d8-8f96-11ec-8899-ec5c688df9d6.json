@@ -1,0 +1,82 @@
+{
+    "standardChannel": [
+        22.234,
+        22.235,
+        22.24,
+        22.5,
+        23.034,
+        23.035,
+        23.04,
+        23.834,
+        23.835,
+        23.84,
+        25.0,
+        25.44,
+        26.234,
+        26.235,
+        26.24,
+        27.84,
+        28.0,
+        30.0,
+        31.4,
+        51.248,
+        51.25,
+        51.26,
+        51.76,
+        52.28,
+        52.8,
+        52.804,
+        53.336,
+        53.34,
+        53.848,
+        53.85,
+        53.86,
+        54.4,
+        54.94,
+        55.5,
+        56.02,
+        56.66,
+        57.288,
+        57.29,
+        57.3,
+        57.96,
+        57.964,
+        58.0,
+        58.8
+    ],
+    "forward_result_path": "F:/lnp/trainData/22",
+    "sounding_path": "F:/lnp/trainData/53772",
+    "model_path": ".\\out\\model",
+    "sample_path": ".\\out\\sample",
+    "model_name": "训练任务3",
+    "sounding_station_id": "53772",
+    "data_sources": [
+        {
+            "stime": "2021-01-01",
+            "etime": "2022-01-01",
+            "cloud_disturb": 3.0,
+            "k_disturb": 0.5,
+            "v_disturb": 0.5,
+            "absorb_disturb": 2.0
+        }
+    ],
+    "input_nodes": [
+        "band-all",
+        "surface-all",
+        "cloud-all"
+    ],
+    "output_nodes": 83,
+    "elements": [
+        "temp",
+        "humi",
+        "vapor"
+    ],
+    "normalization": "minmax",
+    "activation": "tanh",
+    "solver": "lbfgs",
+    "hidden_nodes": [
+        20,
+        40
+    ],
+    "max_iter": 1000
+}

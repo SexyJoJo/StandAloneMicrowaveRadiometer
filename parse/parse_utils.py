@@ -72,7 +72,7 @@ class ParseUtils:
         #     obsTime = sounding_file.unified_format_file_name.split("_")[1][0:14]
         # 文件读取
         try:
-            df = pd.read_csv(fullPath, sep=" ", skiprows=0, header=None)
+            df = pd.read_csv(fullPath, sep=" ", skiprows=0, header=None, engine='python')
             for col in [0, 1, 2, 3]:
                 df[col] = pd.to_numeric(df[col], errors="coerce")
 

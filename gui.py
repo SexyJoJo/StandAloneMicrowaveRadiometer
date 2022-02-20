@@ -1,10 +1,14 @@
-from ast import arg
+from ast import Global, arg
 import os
 import tkinter as tk
 from tkinter import *
+from tkinter.filedialog import askdirectory
 import json
 import uuid
 from parse.file_utils import FileUtils
+from datetime import datetime
+from train.training import Train
+import shutil
 
 # 模型文件路径
 paramsJsonPath = "./config/untrained/"
@@ -61,11 +65,15 @@ class Application(tk.Frame):
         tk.Label(self.top, text="训练任务名称：", font=('Arial', 12)).grid(row=1, column=2)
         tk.Label(self.top, text="站台号：", font=('Arial', 12)).grid(row=2, column=2)
         tk.Label(self.top, text="数据起始时间：", font=('Arial', 12)).grid(row=3, column=2)
+        tk.Label(self.top, text="格式：2012-01-01").grid(row=3, column=4) 
         tk.Label(self.top, text="数据结束时间：", font=('Arial', 12)).grid(row=4, column=2)
+        tk.Label(self.top, text="格式：2022-01-01").grid(row=4, column=4) 
         tk.Label(self.top, text="云层扰动(%)", font=('Arial', 12)).grid(row=5, column=2)
         tk.Label(self.top, text="K通道扰动", font=('Arial', 12)).grid(row=6, column=2)
         tk.Label(self.top, text="V通道扰动", font=('Arial', 12)).grid(row=7, column=2)
         tk.Label(self.top, text="弱吸收通道扰动", font=('Arial', 12)).grid(row=8, column=2)
+        tk.Label(self.top, text="探空文件路径", font=('Arial', 12)).grid(row=9, column=2)
+        tk.Label(self.top, text="探空正演结果文件路径", font=('Arial', 12)).grid(row=10, column=2)
 
         model_name = tk.Entry(self.top)
         model_name.grid(row=1, column=3)
@@ -83,34 +91,57 @@ class Application(tk.Frame):
         v_disturb.grid(row=7, column=3)
         absorb_disturb = tk.Entry(self.top)
         absorb_disturb.grid(row=8, column=3)
+
+        path = {
+            # 探空原文件路径
+            "path1":"",
+            # 正演结果文件路径
+            "path2":""
+        }
+        def selectPath():
+            path["path1"] = askdirectory()
+            tk.Label(self.top, text=path["path1"]).grid(row=9, column=3)
+        def selectPath2():
+            path["path2"] = askdirectory()
+            tk.Label(self.top, text=path["path2"]).grid(row=10, column=3)
+
+        b1 = tk.Button(self.top, text = "路径选择", command = selectPath)
+        b1.grid(row = 9, column = 4)
+        b2 = tk.Button(self.top, text = "路径选择", command = selectPath2)
+        b2.grid(row = 10, column = 4)
+
         
+
         button = tk.Button(self.top, text = "确定" , 
             command=lambda :self.commit(model_name,sounding_station_id,
-            stime,etime,cloud_disturb,k_disturb,v_disturb,absorb_disturb))
+            stime,etime,cloud_disturb,k_disturb,v_disturb,absorb_disturb,path["path1"],path["path2"]))
         button.grid(column = 59, row = 1)
         #   command=self.master.destroy)
 
     # 用户提交
     def commit(self, model_name,sounding_station_id,
-            stime,etime,cloud_disturb,k_disturb,v_disturb,absorb_disturb):
+            stime,etime,cloud_disturb,k_disturb,v_disturb,absorb_disturb,path1,path2):
 
         dataSource = {
             "stime": stime.get(),
             "etime": etime.get(),
-            "cloud_disturb": cloud_disturb.get(),
-            "k_disturb": k_disturb.get(),
-            "v_disturb": v_disturb.get(),
-            "absorb_disturb" : absorb_disturb.get()
+            "cloud_disturb": float(cloud_disturb.get()),
+            "k_disturb": float(k_disturb.get()),
+            "v_disturb": float(v_disturb.get()),
+            "absorb_disturb" : float(absorb_disturb.get())
         }
 
         # 加载模板文件
         with open("./config/template.json", 'r') as file:
             file_dict = json.load(file)
 
-        file_dict["model_name"] = model_name.get()
+        file_dict["sounding_path"] = path1
+        file_dict["forward_result_path"] = path2
+        modelName = model_name.get() + "_" + str(uuid.uuid1())
+        file_dict["model_name"] = modelName
         file_dict["sounding_station_id"] = sounding_station_id.get()
         file_dict["data_sources"].append(dataSource)
-        fileName = model_name.get() + "_" + str(uuid.uuid1())
+        fileName = modelName
         
         # 生成json文件
         with open(paramsJsonPath + fileName + ".json", 'w', encoding='utf8') as parameters_file:
@@ -150,12 +181,26 @@ def consume(q,app):
         if not training and not q.empty():
             training = 1
             task = q.get()
-            print ('训练模型：{}'.format(task)) #如果队列为空，则阻塞在这里持续等待队列中有任务
+            print ('模型：{} 训练中....'.format(task)) #如果队列为空，则阻塞在这里持续等待队列中有任务
+
             # TODO 进行训练
-            time.sleep(6)    
+            # time.sleep(6)   
+            t1 = datetime.now()
+            untrained_path = os.path.join("config/untrained", task + ".json")
+            trained_path = os.path.join("config/trained", task + ".json")
+            with open(untrained_path, "r", encoding='utf8') as f:
+                config = json.load(f)
+            # 训练
+            status = Train.training(config)
+            # 训练成功后移动文件到已训练文件夹
+            if status:
+                shutil.move(untrained_path, trained_path)
+            t2 = datetime.now()
+            print(f"完成时间：{t2-t1}\n") 
+
             q.task_done()
             # 删除相应json文件
-            FileUtils.DeleteFile(paramsJsonPath + task + ".json")
+            # FileUtils.DeleteFile(paramsJsonPath + task + ".json")
             # 刷新队列页面
             app.flushQueue()
             training = 0
