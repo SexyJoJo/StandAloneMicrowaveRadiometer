@@ -349,7 +349,7 @@ class Train:
         return inputDF
 
     @staticmethod
-    def InputStandardization(btLists, temp_humi_pres_Lists, cloud_Lists):
+    def InputStandardization(btLists, temp_humi_pres_Lists, cloud_Lists, cloud2_Lists):
         '''
         模型输入类型标准化
         将几个列表矩阵进行组合构成dataframe 标准输入格式
@@ -363,11 +363,12 @@ class Train:
         input_DF = pd.concat([input_DF, temp_humi_pres_DF], axis=1)
         cloud__DF = pd.DataFrame(cloud_Lists)
         input_DF = pd.concat([input_DF, cloud__DF], axis=1)
+        cloud2_DF = pd.DataFrame(cloud2_Lists)
+        input_DF = pd.concat([input_DF, cloud2_DF], axis=1)
         return input_DF
 
     @staticmethod
-    def OrganizationalColumns(config, selectBtNodeNumbers, surfaceNodes, cloudNodes,
-                              isTime):
+    def OrganizationalColumns(config, selectBtNodeNumbers, surfaceNodes, cloudNodes, cloud2Nodes, isTime):
         """
             动态组织df列头
             selectBtNodeNumbers: 亮温节点索引[0,1,2.....]
@@ -408,8 +409,15 @@ class Train:
         if 5 in cloudNodes:
             cloud_header.append(CLOUD_THICK3)
 
+        # 云层区间高度节点列头
+        cloud2_header = []
+        if 0 in cloud2Nodes:
+            cloud2_header.append(CLOUD_BOTTOM)
+        if 1 in cloud2Nodes:
+            cloud2_header.append(CLOUD_TOP)
+
         header = [dateTime] if isTime else []
-        header += frequencyList + temp_humi_pres_header + cloud_header
+        header += frequencyList + temp_humi_pres_header + cloud_header + cloud2_header
 
         return header
 
@@ -418,7 +426,7 @@ class Train:
         # 动态列头
         header = Train.OrganizationalColumns(
             config, input_nodes["btNodes"], input_nodes["surfaceNodes"],
-            input_nodes["cloudNodes"], isTime=False)
+            input_nodes["cloudNodes"], input_nodes["cloud2Nodes"], isTime=False)
         """
         组织训练样本数据
         """
@@ -498,6 +506,15 @@ class Train:
                 ]
             """
             cloud_Lists = []
+
+            # 云底云高高度节点矩阵
+            """
+            [
+                [2],
+                []
+            ]
+            """
+            cloud2_Lists = []
             """
             扰动参数
             """
@@ -597,15 +614,27 @@ class Train:
                 else:
                     # 没有云数据按照晴天来处理
                     cloud_List = [0, 0, 0, 0, 0, 0]
+
+                # 计算最大云区间高度数据
+                cloud2_List = CloudCalculater.CalculateCloudIntervalHeight(cloud_List)
+
                 # 过滤有效云节点
                 cloud_List = [
                     cloud_List[index] for index in range(len(cloud_List))
                     if index in input_nodes["cloudNodes"]
                 ]
                 cloud_Lists.append(cloud_List)
+
+                # 过滤云区间高度节点
+                cloud2_List = [
+                    cloud2_List[index] for index in range(len(cloud2_List))
+                    if index in input_nodes["cloud2Nodes"]
+                ]
+                cloud2_Lists.append(cloud2_List)
+
             # 输入样本格式化
             input_DF = Train.InputStandardization(
-                btLists, temp_humi_pres_Lists, cloud_Lists)
+                btLists, temp_humi_pres_Lists, cloud_Lists, cloud2_Lists)
 
             # 输入加扰动项
             input_DF = Train.SamplePerturbation(
@@ -645,6 +674,9 @@ class Train:
             if node == 'cloud-all':
                 cloudNodes = [0, 1, 2, 3, 4, 5]
                 continue
+            if node == 'cloud2-interval':
+                cloud2Nodes = [0, 1]
+                continue
             if node == 'band-all':
                 # wbfsj = WBFSJDao().getWBFSJById(wbfsj_id)
                 btNodes = DEVICE_INFO[config["sounding_station_id"]]["channels_map"]
@@ -656,10 +688,13 @@ class Train:
                 surfaceNodes.append(int(node.split("-")[-1]))
             if "cloud" in node:
                 cloudNodes.append(int(node.split("-")[-1]))
+            if "cloud2" in node:
+                cloud2Nodes.append(int(node.split("-")[-1]))
         input_nodes = {
             "btNodes": btNodes,
             "surfaceNodes": surfaceNodes,
-            "cloudNodes": cloudNodes
+            "cloudNodes": cloudNodes,
+            "cloud2Nodes": cloud2Nodes
         }
 
         train_log.logger.info("正在初始化并保存模型文件...")

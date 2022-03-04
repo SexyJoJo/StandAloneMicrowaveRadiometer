@@ -134,6 +134,7 @@ class TrainUtils:
             'inputBtNodes': input_nodes["btNodes"],
             'surfaceNodes': input_nodes["surfaceNodes"],
             'cloudNodes': input_nodes["cloudNodes"],
+            'cloud2Nodes': input_nodes["cloud2Nodes"],
             'mappingNodes': mapping_bands
         }
 

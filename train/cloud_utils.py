@@ -3,6 +3,24 @@ from math import log10
 
 class CloudCalculater:
     """
+    根据6个云节点数据计算出2个最大区间节点：云底高度、云顶高度
+    """
+    @staticmethod
+    def CalculateCloudIntervalHeight(cloud_List):
+        cloud_bottom = 0
+        cloud_top = 0
+        i = 0
+        while i < len(cloud_List):
+            if cloud_List[i] and not cloud_bottom:
+                cloud_bottom = cloud_List[i]
+            i += 2
+
+        cloud_top = cloud_bottom + cloud_List[1] + cloud_List[3] + cloud_List[5]
+        cloud_top = 10000 if cloud_top > 10000 else cloud_top
+
+        return [cloud_bottom, cloud_top]
+
+    """
     根据探空文件进行云层计算
     根据得到的湿度，判断是否入云，计算云层信息
     hei_temp_humi_list:原始探空高度层对应温度湿度列表

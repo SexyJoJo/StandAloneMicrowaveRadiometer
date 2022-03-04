@@ -15,5 +15,9 @@ CLOUD_BOTTOM3 = "Bottom3"
 CLOUD_TOP3 = "Top3"
 CLOUD_THICK3 = "Thick3"
 
+# 云层区间高度文件数据表头常量
+CLOUD_BOTTOM = "Bottom"
+CLOUD_TOP = "Top"
+
 # 探空统一格式文件名匹配正则：
 # SOUNDING_UNIFIED_RE_STRING = "^[\d]{5}[\_][\d]{14}.[Tt][Xx][Tt]$"
