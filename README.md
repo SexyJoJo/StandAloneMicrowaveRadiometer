@@ -11,3 +11,9 @@
 3. untrained中的任务处理结束后，任务会移动至trained目录下。
 4. 训练结果保存至out目录下的model目录中。
 5. 日志文件在log目录中
+
+# 部署指南
+1. 使用pip安装依赖:
+   pip install -r requirements
+2. 运行可视化界面程序：
+   python ./gui.py

@@ -1,0 +1,14 @@
+[[source]]
+url = "https://mirrors.aliyun.com/pypi/simple"
+verify_ssl = true
+name = "custom"
+
+[packages]
+scipy = "*"
+pandas = "*"
+sklearn = "*"
+
+[dev-packages]
+
+[requires]
+python_version = "3.6"

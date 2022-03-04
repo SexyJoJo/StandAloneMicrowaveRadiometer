@@ -1,3 +1,8 @@
-out/*
+# Editor directories and files
 .idea
-log/train/*
+.vscode
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?

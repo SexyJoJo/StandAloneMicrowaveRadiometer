@@ -44,8 +44,8 @@
     58.000,
     58.800
   ],
-  "forward_result_path": "F:\\lnp\\trainData\\22",
-  "sounding_path": "F:\\lnp\\trainData\\53772",
+  "forward_result_path": "D:\\Data\\microwave radiometer\\Forward Result\\sounding",
+  "sounding_path": "D:\\Data\\microwave radiometer\\Sounding",
   "model_path": ".\\out\\model",
   "sample_path": ".\\out\\sample",
   "model_name": "TaiYuan_TenYears_test",

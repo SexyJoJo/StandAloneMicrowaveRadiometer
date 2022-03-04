@@ -13,7 +13,7 @@ from sklearn.model_selection import ShuffleSplit, GridSearchCV
 from sklearn.neural_network import MLPRegressor
 from sklearn.exceptions import ConvergenceWarning
 import warnings
-
+import random
 
 class Train:
     @staticmethod
@@ -113,7 +113,7 @@ class Train:
             'beta_1': es['beta_1'],
             'beta_2': es['beta_2'],
             'epsilon': es['epsilon'],
-            'n_iter_no_change': es['n_iter_no_change'],
+            'n_iter_no_change': es['n_iter_no_change'] if 'n_iter_no_change' in es else None,
             'n_iter_': es['n_iter_'],
             't_': es['t_'],
             'n_layers_': es['n_layers_'],
@@ -131,6 +131,10 @@ class Train:
         :y_train 训练输出
         :paras_dict 模型超参数
         """
+        # 固定网络初始化的权重参数随机种子
+        random.seed(1) 
+        np.random.seed(1)
+
         clf = MLPRegressor(solver='lbfgs',
                            activation='tanh',
                            alpha=1e-7,
@@ -607,13 +611,15 @@ class Train:
             input_DF = Train.SamplePerturbation(
                 config, input_nodes["btNodes"], input_DF, disturb,
                 input_nodes["surfaceNodes"], input_nodes["cloudNodes"])
+
             if not input_DF.empty:
                 input_DF.columns = header
             # print("加入扰动项之后的样本: ", input_DF)
-            # 输出不加扰动，样本直接原样翻倍
             temp_DF = pd.DataFrame(tempLists, columns=column)
             humi_DF = pd.DataFrame(humiLists, columns=column)
             vapor_DF = pd.DataFrame(vaporLists, columns=column)
+
+            # 输出不加扰动，样本直接原样翻倍
             temp_DF = temp_DF.append(temp_DF, ignore_index=True)
             humi_DF = humi_DF.append(humi_DF, ignore_index=True)
             vapor_DF = vapor_DF.append(vapor_DF, ignore_index=True)
