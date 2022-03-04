@@ -8,10 +8,15 @@ import uuid
 from parse.file_utils import FileUtils
 from datetime import datetime
 from train.training import Train
+from log.log import train_log
+import traceback
+
 import shutil
 
 # 模型文件路径
 paramsJsonPath = "./config/untrained/"
+failedPath = "./config/failed/"
+trained_path = "./config/trained/"
 
 def window_centered(window, width, height):
     """窗口默认居中并显示"""
@@ -34,7 +39,10 @@ class Application(tk.Frame):
 
     def flushQueue(self):
         self.task_list.delete(0, END) 
-        for task in os.listdir(r"config/untrained"):
+        filePath = paramsJsonPath
+        if not os.path.exists(filePath):
+            os.makedirs(filePath)
+        for task in os.listdir(filePath):
             self.task_list.insert(END, task)
 
     def create_widgets(self):
@@ -115,7 +123,7 @@ class Application(tk.Frame):
         button = tk.Button(self.top, text = "确定" , 
             command=lambda :self.commit(model_name,sounding_station_id,
             stime,etime,cloud_disturb,k_disturb,v_disturb,absorb_disturb,path["path1"],path["path2"]))
-        button.grid(column = 59, row = 1)
+        button.grid(column = 3, row = 11)
         #   command=self.master.destroy)
 
     # 用户提交
@@ -179,32 +187,50 @@ def consume(q,app):
     training = 0 # 当前是否有训练任务标记
     while True:
         if not training and not q.empty():
-            training = 1
+            training = 1 #占用线程
             task = q.get()
-            print ('模型：{} 训练中....'.format(task)) #如果队列为空，则阻塞在这里持续等待队列中有任务
+            train_log.logger.info(f"模型: {task} 训练中..... ") #如果队列为空，则阻塞在这里持续等待队列中有任务
+            untrained_path = os.path.join(paramsJsonPath, task + ".json")
+            trained_file = os.path.join(trained_path, task + ".json")
+            failed_file = os.path.join(failedPath, task + ".json")
+            try:
+                # 进行训练
+                # time.sleep(6)   
 
-            # TODO 进行训练
-            # time.sleep(6)   
-            t1 = datetime.now()
-            untrained_path = os.path.join("config/untrained", task + ".json")
-            trained_path = os.path.join("config/trained", task + ".json")
-            with open(untrained_path, "r", encoding='utf8') as f:
-                config = json.load(f)
-            # 训练
-            status = Train.training(config)
-            # 训练成功后移动文件到已训练文件夹
-            if status:
-                shutil.move(untrained_path, trained_path)
-            t2 = datetime.now()
-            print(f"完成时间：{t2-t1}\n") 
+                t1 = datetime.now()
+                with open(untrained_path, "r", encoding='utf8') as f:
+                    config = json.load(f)
+                # 训练
+                status = Train.training(config)
+                # 训练成功后移动文件到已训练文件夹
+                if status:
+                    shutil.move(untrained_path, trained_file)
+                else:
+                    if not os.path.exists(failedPath):
+                        os.makedirs(failedPath)
+                    shutil.move(untrained_path, failed_file)
+                t2 = datetime.now()
+                print(f"完成时间：{t2-t1}\n") 
+                q.task_done()
 
-            q.task_done()
-            # 删除相应json文件
-            # FileUtils.DeleteFile(paramsJsonPath + task + ".json")
-            # 刷新队列页面
-            app.flushQueue()
-            training = 0
+                train_log.logger.info(f"模型：{task} 训练完成")
 
+            except Exception:
+                train_log.logger.info(f"模型：{task} 训练异常,跳过")
+                print(traceback.format_exc())
+                training = 0
+                if not os.path.exists(failedPath):
+                    os.makedirs(failedPath)
+                shutil.move(untrained_path, failed_file)
+
+            finally:
+                # 刷新队列页面
+                app.flushQueue()
+                # 清空线程占用
+                training = 0
+
+                
+                
 
 if __name__ == '__main__':
     
