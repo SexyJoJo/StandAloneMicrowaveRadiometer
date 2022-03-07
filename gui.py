@@ -214,7 +214,7 @@ def consume(q, app):
             failed_file = os.path.join(failedPath, task + ".json")
             try:
                 # 进行训练
-                time.sleep(6)
+                # time.sleep(6)
 
                 t1 = datetime.now()
                 with open(untrained_path, "r", encoding='utf8') as f:
