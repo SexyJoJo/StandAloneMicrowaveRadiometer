@@ -32,8 +32,8 @@
   "activation": "tanh",
   "solver": "lbfgs",
   "hidden_nodes": [
-      25,
-      36
+      20,
+      40
   ],
   "max_iter": 1000
 }
