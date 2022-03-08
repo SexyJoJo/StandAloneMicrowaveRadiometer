@@ -13,7 +13,9 @@
 5. 日志文件在log目录中
 
 # 部署指南
-1. 使用pip安装依赖:
-   pip install -r requirements
-2. 运行可视化界面程序：
+1. 安装pipenv: pip install pipenv 
+2. 创建虚拟环境 pipenv shell
+3. 使用pipenv安装依赖:
+   pipenv install -r requirements
+4. 运行可视化界面程序：
    python ./gui.py
