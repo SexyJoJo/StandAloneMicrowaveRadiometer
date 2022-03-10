@@ -667,6 +667,7 @@ class Train:
         btNodes = []
         surfaceNodes = []
         cloudNodes = []
+        cloud2Nodes = []
         for node in config["input_nodes"]:
             if node == 'surface-all':
                 surfaceNodes = [0, 1, 2]
