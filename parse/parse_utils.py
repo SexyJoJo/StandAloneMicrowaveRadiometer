@@ -1,13 +1,12 @@
 import copy
-import sys
-
+import random
 from scipy import interpolate
 import pandas as pd
 from const import TrainConsts
 from const.Consts import DEVICE_INFO
 import os
 from datetime import datetime
-
+from log.log import train_log
 
 # class Mysql:
 #     @staticmethod
@@ -73,6 +72,8 @@ class ParseUtils:
         # 文件读取
         try:
             df = pd.read_csv(fullPath, sep=" ", skiprows=0, header=None, engine='python')
+            df.iloc[0, 1] += random.randint(-10, 10)
+            print(df)
             for col in [0, 1, 2, 3]:
                 df[col] = pd.to_numeric(df[col], errors="coerce")
 
@@ -137,13 +138,13 @@ class ParseUtils:
                     tmp_meteorological_elements_83layer)
             return meteorological_elements_83layers
         except FileNotFoundError:
-            print(f"缺少{obs_time}探空文件")
-            sys.exit()
+            train_log.logger.error(f"未找到{fullPath}探空文件")
+            # sys.exit()
 
     @staticmethod
     def get_forward_results_by_condition(config, data_source):
         """根据设备号和日期筛选所需的正演结果数据"""
-        print("正在解析正演结果")
+        train_log.logger.info("正在解析正演结果")
         results = {}
         selected_path = os.path.join(
             config["forward_result_path"], str(DEVICE_INFO[config["sounding_station_id"]]["id"]),
@@ -158,7 +159,7 @@ class ParseUtils:
                     if stime <= file_time <= etime and os.path.getsize(os.path.join(root, filename)) != 0:
                         results[datetime.strftime(file_time, "%Y%m%d%H%M%S")] = \
                             ParseUtils.parse_forward_result(config, os.path.join(root, filename))
-        print("解析完毕")
+        train_log.logger.info("解析完毕")
         return results
 
 # print(ParseUtils.get_forward_results_by_condition())
