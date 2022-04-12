@@ -73,7 +73,6 @@ class ParseUtils:
         try:
             df = pd.read_csv(fullPath, sep=" ", skiprows=0, header=None, engine='python')
             df.iloc[0, 1] += random.randint(-10, 10)
-            print(df)
             for col in [0, 1, 2, 3]:
                 df[col] = pd.to_numeric(df[col], errors="coerce")
 
@@ -151,14 +150,21 @@ class ParseUtils:
             str(DEVICE_INFO[config["sounding_station_id"]]["alt"]))
         for root, dirs, files in os.walk(selected_path):
             for filename in files:
-                if filename.endswith(".out"):
-                    file_time = filename.split(".")[0]
-                    file_time = datetime.strptime(file_time, "%Y%m%d%H%M%S")
+                if filename.endswith("IN_liquid_cloud.out"):
+                    file_time_str = filename.split(".")[0]
+                    file_time = datetime.strptime(file_time_str, "%Y%m%d%H%M%S")
                     stime = datetime.strptime(data_source["stime"], "%Y-%m-%d")
                     etime = datetime.strptime(data_source["etime"], "%Y-%m-%d")
-                    if stime <= file_time <= etime and os.path.getsize(os.path.join(root, filename)) != 0:
-                        results[datetime.strftime(file_time, "%Y%m%d%H%M%S")] = \
-                            ParseUtils.parse_forward_result(config, os.path.join(root, filename))
+                    if stime <= file_time <= etime:
+                        if os.path.getsize(os.path.join(root, filename)) != 0:
+                            parse_file = os.path.join(root, filename)
+                            results[datetime.strftime(file_time, "%Y%m%d%H%M%S")] = \
+                                ParseUtils.parse_forward_result(config, parse_file)
+                        else:
+                            parse_file = os.path.join(root, file_time_str + '.IN_NOSCALE_IATM1_dn.out')
+                            results[datetime.strftime(file_time, "%Y%m%d%H%M%S")] = \
+                                ParseUtils.parse_forward_result(config, os.path.join(root, parse_file))
+                        print(parse_file)
         train_log.logger.info("解析完毕")
         return results
 
