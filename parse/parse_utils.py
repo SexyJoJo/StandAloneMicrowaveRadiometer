@@ -1,5 +1,7 @@
 import copy
 import random
+
+import numpy as np
 from scipy import interpolate
 import pandas as pd
 from const import TrainConsts
@@ -37,7 +39,7 @@ class ParseUtils:
 
         all_bt = data['BT(K)']
         for i in range(len(all_bt)):
-            bt_value = all_bt[i] if all_bt[i] else -999999
+            bt_value = all_bt[i] if all_bt[i] else np.nan
             brightness_temperature_43channels.append(bt_value)  # 43通道亮温值
 
         # 映射
@@ -72,7 +74,7 @@ class ParseUtils:
         # 文件读取
         try:
             df = pd.read_csv(fullPath, sep=" ", skiprows=0, header=None, engine='python')
-            df.iloc[0, 1] += random.randint(-10, 10)
+            # df.iloc[0, 1] = random.randint(975, 1000) TODO 气压扰动
             for col in [0, 1, 2, 3]:
                 df[col] = pd.to_numeric(df[col], errors="coerce")
 
@@ -158,14 +160,21 @@ class ParseUtils:
                     if stime <= file_time <= etime:
                         if os.path.getsize(os.path.join(root, filename)) != 0:
                             parse_file = os.path.join(root, filename)
-                            results[datetime.strftime(file_time, "%Y%m%d%H%M%S")] = \
-                                ParseUtils.parse_forward_result(config, parse_file)
+                            try:
+                                results[datetime.strftime(file_time, "%Y%m%d%H%M%S")] = \
+                                    ParseUtils.parse_forward_result(config, parse_file)
+                            except pd.errors.EmptyDataError:
+                                print("空df， 跳过")
+                                continue
                         else:
                             parse_file = os.path.join(root, file_time_str + '.IN_NOSCALE_IATM1_dn.out')
-                            results[datetime.strftime(file_time, "%Y%m%d%H%M%S")] = \
-                                ParseUtils.parse_forward_result(config, os.path.join(root, parse_file))
+                            try:
+                                results[datetime.strftime(file_time, "%Y%m%d%H%M%S")] = \
+                                    ParseUtils.parse_forward_result(config, os.path.join(root, parse_file))
+                            except pd.errors.EmptyDataError:
+                                print(parse_file, "空df， 跳过")
+                                continue
                         print(parse_file)
         train_log.logger.info("解析完毕")
         return results
 
-# print(ParseUtils.get_forward_results_by_condition())

@@ -15,6 +15,7 @@ from sklearn.exceptions import ConvergenceWarning
 import warnings
 import random
 
+
 class Train:
     @staticmethod
     def SaveModelParameters(fileFullName, grid, element, s_scaler, out_scaler):
@@ -132,7 +133,7 @@ class Train:
         :paras_dict 模型超参数
         """
         # 固定网络初始化的权重参数随机种子
-        random.seed(1) 
+        random.seed(1)
         np.random.seed(1)
 
         clf = MLPRegressor(solver='lbfgs',
@@ -158,7 +159,7 @@ class Train:
         best_clf = grid.best_estimator_
         estimator = best_clf
         print(best_clf)
-        print(grid.best_score_)
+        print('误差：', grid.best_score_)
         print(grid.best_params_)
         print('------')
         return grid
@@ -303,7 +304,7 @@ class Train:
                                     x_next * random_rate)
                                 if old_df_list[i][j + 2] != 0 and (
                                         old_df_list[i][j] + old_df_list[i][
-                                    j + 1]) > old_df_list[i][j + 2]:
+                                            j + 1]) > old_df_list[i][j + 2]:
                                     # 差值
                                     diff = (old_df_list[i][j] +
                                             old_df_list[i][j + 1]
@@ -345,7 +346,6 @@ class Train:
 
             # 合并之后的df
             inputDF = inputDF.append(disrurb_df, ignore_index=True)
-
         return inputDF
 
     @staticmethod
@@ -423,6 +423,7 @@ class Train:
 
     @staticmethod
     def OrganizeTrainingSamples(config, data_sources, output_nodes, input_nodes):
+        # TODO 这个函数有问题
         # 动态列头
         header = Train.OrganizationalColumns(
             config, input_nodes["btNodes"], input_nodes["surfaceNodes"],
@@ -636,6 +637,7 @@ class Train:
             input_DF = Train.InputStandardization(
                 btLists, temp_humi_pres_Lists, cloud_Lists, cloud2_Lists)
 
+            # TODO
             # 输入加扰动项
             input_DF = Train.SamplePerturbation(
                 config, input_nodes["btNodes"], input_DF, disturb,
@@ -644,11 +646,12 @@ class Train:
             if not input_DF.empty:
                 input_DF.columns = header
             # print("加入扰动项之后的样本: ", input_DF)
+
             temp_DF = pd.DataFrame(tempLists, columns=column)
             humi_DF = pd.DataFrame(humiLists, columns=column)
             vapor_DF = pd.DataFrame(vaporLists, columns=column)
 
-            # 输出不加扰动，样本直接原样翻倍
+            # 输出不加扰动，样本直接原样翻倍   TODO
             temp_DF = temp_DF.append(temp_DF, ignore_index=True)
             humi_DF = humi_DF.append(humi_DF, ignore_index=True)
             vapor_DF = vapor_DF.append(vapor_DF, ignore_index=True)
@@ -702,14 +705,18 @@ class Train:
         # 初始化并保存模型文件
         modelFullName = TrainUtils.SaveModelParamFile(config, config["data_sources"], config["activation"],
                                                       config["elements"], input_nodes, config["normalization"])
-        train_log.logger.info("Done.")
+        train_log.logger.info("初始化并保存完毕")
 
         # 组织输入样本
         train_log.logger.info("正在组织输入样本...")
         # wbfsj_id = CONFIG["wbfsj_id"]
         all_input_df, all_temp_output_df, all_humi_output_df, all_vapor_output_df = Train.OrganizeTrainingSamples(
             config, config["data_sources"], config["output_nodes"], input_nodes)
-        train_log.logger.info("Done.")
+        train_log.logger.info("组织样本完毕")
+        # all_input_df = pd.read_csv(r"out/sample/1_temp_x_train.csv")
+        # all_temp_output_df = pd.read_csv(r"out/sample/1_temp_y_train.csv")
+        # all_humi_output_df = pd.read_csv(r"out/sample/1_humi_y_train.csv")
+        # all_vapor_output_df = None
 
         if not all_input_df.empty:
             train_log.logger.info("模型训练中...")
@@ -718,16 +725,9 @@ class Train:
                 config, config["elements"], config["max_iter"], config["activation"], config["solver"],
                 config["hidden_nodes"], all_input_df, all_temp_output_df,
                 all_humi_output_df, all_vapor_output_df, modelFullName)
-            # status = 0
             message = "训练成功"
         else:
-            # status = 1
             message = "输入样本为0"
-        # 训练结束修改训练任务状态
-        # trainTask = TrainTaskDao().getTrainTaskByID(trainTask.id)
-        # trainTask.status = status
-        # TrainTaskDao().updateTrainTask(trainTask)
-        # return resultInfo.success(msg=message)
         train_log.logger.info(message)
         return True
         # except Exception as e:
