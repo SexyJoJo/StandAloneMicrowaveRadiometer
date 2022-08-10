@@ -277,8 +277,7 @@ class Train:
             ground_humidity_index = len(input_nodes) + 1
             # 弱吸收通道扰
             for index, channelNumber in enumerate(input_nodes):
-                # standardChannel = StandardChannelDao().getStandardChannelByNumber(channelNumber)
-                frequency = float(config["standardChannel"][index])
+                frequency = float(config["standardChannel"][channelNumber])
                 if frequency > k_weak_absorption_frequency:
                     k_weak_absorption_index = index
                 if frequency > weak_absorption_v_frequency:
@@ -389,11 +388,11 @@ class Train:
         # 温湿压列头
         temp_humi_pres_header = []
         if 0 in surfaceNodes:
-            temp_humi_pres_header.append("temperature")
+            temp_humi_pres_header.append("Temp(C)")
         if 1 in surfaceNodes:
-            temp_humi_pres_header.append("humidity")
+            temp_humi_pres_header.append("RH(%)")
         if 2 in surfaceNodes:
-            temp_humi_pres_header.append("pressure")
+            temp_humi_pres_header.append("Pres(hPa)")
         # 云节点列头
         cloud_header = []
         if 0 in cloudNodes:
@@ -637,7 +636,6 @@ class Train:
             input_DF = Train.InputStandardization(
                 btLists, temp_humi_pres_Lists, cloud_Lists, cloud2_Lists)
 
-            # TODO
             # 输入加扰动项
             input_DF = Train.SamplePerturbation(
                 config, input_nodes["btNodes"], input_DF, disturb,
@@ -651,7 +649,7 @@ class Train:
             humi_DF = pd.DataFrame(humiLists, columns=column)
             vapor_DF = pd.DataFrame(vaporLists, columns=column)
 
-            # 输出不加扰动，样本直接原样翻倍   TODO
+            # 输出不加扰动，样本直接原样翻倍
             temp_DF = temp_DF.append(temp_DF, ignore_index=True)
             humi_DF = humi_DF.append(humi_DF, ignore_index=True)
             vapor_DF = vapor_DF.append(vapor_DF, ignore_index=True)
