@@ -167,16 +167,6 @@ class Train:
     @staticmethod
     def SampleStandardAndSave(element, taskId, all_input_df, all_output_df,
                               filePath):
-        # x_train = []
-        # y_train = []
-        # for index, value in enumerate(all_input_df):
-        #     if index == 0:
-        #         x_train = value
-        #         y_train = all_output_df[index:index+1]
-        #     else:
-        #         x_train = x_train.append(value, ignore_index=True)
-        #         y_train = y_train.append(all_output_df[index:index+1],
-        #                                  ignore_index=True)
         # 空值行滤除
         delete_index = all_input_df[all_input_df.isnull().T.any()].index.tolist()
         print(delete_index)
@@ -422,7 +412,6 @@ class Train:
 
     @staticmethod
     def OrganizeTrainingSamples(config, data_sources, output_nodes, input_nodes):
-        # TODO 这个函数有问题
         # 动态列头
         header = Train.OrganizationalColumns(
             config, input_nodes["btNodes"], input_nodes["surfaceNodes"],
@@ -446,20 +435,6 @@ class Train:
             print("93层输出结果未处理")
 
         for data_source in list(data_sources):
-            # # 查询相应时刻的正演结果模拟亮温数据
-            # filters = []
-            # filters.append(ForwardResult.wbfsj_id == wbfsj_id)
-            # # EC源
-            # if data_source["type"]:
-            #     filters.append(
-            #         ForwardResult.automatic_station_id == data_source["id"])
-            # # 探空源
-            # else:
-            #     filters.append(
-            #
-            #         ForwardResult.sounding_station_id == data_source["id"])
-            # filters.append(ForwardResult.datetime >= data_source["stime"])
-            # filters.append(ForwardResult.datetime <= data_source["etime"])
             forwardResults = ParseUtils.get_forward_results_by_condition(config, data_source)
             if not len(forwardResults):
                 train_log.logger.warning("所选设备和日期条件无正演结果")
@@ -561,25 +536,7 @@ class Train:
                     if index in input_nodes["surfaceNodes"]
                 ]
                 temp_humi_pres_Lists.append(temp_humi_pres_List)
-                # 组织云数据矩阵
-                # cloudData = CloudDataDao().getCloudDataByDateTime(
-                #     forwardResult.datetime)
-                # 优先使用云雷达数据
-                # if cloudData is not None:
-                #     cloud_List = [
-                #         cloudData.cloud_bottom1,
-                #         cloudData.cloud_thickness1,
-                #         cloudData.cloud_bottom2,
-                #         cloudData.cloud_thickness2,
-                #         cloudData.cloud_bottom3,
-                #         cloudData.cloud_thickness3,
-                #     ]
-                # # 根据探空计算云数据
-                # else: 暂时没有云数据
-                # 探空原数据
-                # monortmStandardInputData = MonortmStandardInputDataDao(
-                # ).getMonortmStandardInputDataById(
-                #     forwardResult.monortm_standard_inputdata_id)
+
                 hei_temp_humi_list = []
                 for layer in layers83:
                     if layer["height"] - layers83[0]["height"] > 10000:
@@ -711,10 +668,6 @@ class Train:
         all_input_df, all_temp_output_df, all_humi_output_df, all_vapor_output_df = Train.OrganizeTrainingSamples(
             config, config["data_sources"], config["output_nodes"], input_nodes)
         train_log.logger.info("组织样本完毕")
-        # all_input_df = pd.read_csv(r"out/sample/1_temp_x_train.csv")
-        # all_temp_output_df = pd.read_csv(r"out/sample/1_temp_y_train.csv")
-        # all_humi_output_df = pd.read_csv(r"out/sample/1_humi_y_train.csv")
-        # all_vapor_output_df = None
 
         if not all_input_df.empty:
             train_log.logger.info("模型训练中...")

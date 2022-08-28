@@ -10,17 +10,6 @@ import os
 from datetime import datetime
 from log.log import train_log
 
-# class Mysql:
-#     @staticmethod
-#     def get_info_by_station(info):
-#         conn = sqlalchemy.create_engine('mysql+pymysql://root:123@localhost/microwave?charset=utf8')
-#         station_id =
-#         config["sounding_station_id"]
-#         sql = f"SELECT {info} FROM t_device_info WHERE station_id={station_id}"
-#         result = conn.execute(sql).fetchone()[0]
-#         if isinstance(result, str):
-#             return eval(result)
-#         return result
 
 class ParseUtils:
     @staticmethod
@@ -74,7 +63,7 @@ class ParseUtils:
         # 文件读取
         try:
             df = pd.read_csv(fullPath, sep=" ", skiprows=0, header=None, engine='python')
-            # df.iloc[0, 1] = random.randint(975, 1000) TODO 气压扰动
+            # df.iloc[0, 1] = random.randint(975, 1000)
             for col in [0, 1, 2, 3]:
                 df[col] = pd.to_numeric(df[col], errors="coerce")
 
