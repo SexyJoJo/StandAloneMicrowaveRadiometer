@@ -63,7 +63,7 @@ class ParseUtils:
         # 文件读取
         try:
             df = pd.read_csv(fullPath, sep=" ", skiprows=0, header=None, engine='python')
-            # df.iloc[0, 1] = random.randint(975, 1000)
+            df.iloc[0, 1] += random.randint(-10, 10)
             for col in [0, 1, 2, 3]:
                 df[col] = pd.to_numeric(df[col], errors="coerce")
 
