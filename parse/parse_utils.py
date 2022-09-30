@@ -13,6 +13,19 @@ from log.log import train_log
 
 class ParseUtils:
     @staticmethod
+    def parse_lv1(results, lv1_file):
+        df = pd.read_csv(lv1_file, skiprows=2, encoding='gbk')
+        if df.empty:
+            return results
+
+        for index, line in df.iterrows():
+            filetime = line["DateTime"]
+            filetime = datetime.strptime(filetime, "%Y-%m-%d %H:%M:%S")
+            filetime = datetime.strftime(filetime, "%Y%m%d%H%M%S")
+            results[filetime] = line[10:-1].tolist()
+        return results
+
+    @staticmethod
     def parse_forward_result(config, result_file):
         """解析正演结果，返回43通道亮温值"""
         brightness_temperature_43channels = []
@@ -165,5 +178,24 @@ class ParseUtils:
                                 continue
                         print(parse_file)
         train_log.logger.info("解析完毕")
+        return results
+
+    @staticmethod
+    def get_lv1_by_condition(config, data_source):
+        train_log.logger.info("正在解析lv1数据")
+        results = {}
+        selected_path = os.path.join(config["lv1_path"], config["sounding_station_id"])
+        for root, dirs, files in os.walk(selected_path):
+            for filename in files:
+                print(filename)
+                if filename.endswith('RAW_D.txt'):
+                    file_time_str = filename.split("_")[4]
+                    file_time = datetime.strptime(file_time_str, "%Y%m%d%H%M%S")
+                    stime = datetime.strptime(data_source["stime"], "%Y-%m-%d")
+                    etime = datetime.strptime(data_source["etime"], "%Y-%m-%d")
+                    if stime <= file_time <= etime:
+                        if os.path.getsize(os.path.join(root, filename)) != 0:
+                            parse_file = os.path.join(root, filename)
+                            results = ParseUtils.parse_lv1(results, parse_file)
         return results
 
